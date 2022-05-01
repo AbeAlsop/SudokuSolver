@@ -15,6 +15,8 @@ class Cell {
 	}
 	fun notPossible(n:Int) {
 		possibles.remove(n)
+		if (possibles.isEmpty())
+			assert(false)
 	}
 }
 
@@ -179,6 +181,64 @@ class SudokuBoard {
 			nine.findExclusiveTriples()
 			nine.forceValues()
 		}
+		extendRestrictedNumbers()
+	}
+	fun extendRestrictedNumbers() {
+		for (n in 1..9) {
+			for (i in 0..2) {
+				for (j in 0..2) {
+					var row= numConstrainedInBox(n, i, j, true)
+					if (row != -1) {
+						for (newI in 0..2) {
+							if (newI != i) {
+								removeNumFromRow(n,newI,j,row)
+							}
+						}
+					}
+					var col= numConstrainedInBox(n, i, j, false)
+					if (col != -1) {
+						for (newJ in 0..2) {
+							if (newJ != j) {
+								removeNumFromCol(n,i,newJ,col)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	fun removeNumFromRow(n:Int, i:Int, j:Int, y:Int) {
+		for (x in 0..2) {
+			numbers[i][j][x][y].notPossible(n)
+		}
+	}
+	fun removeNumFromCol(n:Int, i:Int, j:Int, x:Int) {
+		for (y in 0..2) {
+			numbers[i][j][x][y].notPossible(n)
+		}
+	}
+	fun numConstrainedInBox(n:Int, i:Int, j:Int, rowOrColumn:Boolean) : Int {
+		var row= -1
+		for (x in 0..2) {
+			for (y in 0..2) {
+				var curRowVal= if (rowOrColumn) y else x
+				var cell= numbers[i][j][x][y]
+				if (cell.valueIsKnown) {
+					if (cell.value == n)
+						return -1
+				}
+				else
+				{
+					if (cell.possibles.contains(n)) {
+						if (row == -1)
+							row = curRowVal
+						else if (row != curRowVal)
+							return -1
+					}
+				}
+			}
+		}
+		return row
 	}
 	fun uniqueString() : String {
 		var retVal = ""
